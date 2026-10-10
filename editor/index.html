@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BBPort Controller Remapper</title>
+<style>
+:root{color-scheme:dark;--bg:#101216;--panel:#191c22;--panel2:#20242c;--line:#343944;--text:#f0f2f5;--muted:#a8afba;--accent:#d7c39a;--accentText:#201b12;--danger:#efb7b7}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#20232b 0,#101216 56%);color:var(--text);font:15px/1.45 "Segoe UI",system-ui,sans-serif;min-height:100vh}
+main{max-width:1050px;margin:0 auto;padding:34px 20px 50px}.eyebrow{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:none}.contact-line{font-size:15px;font-weight:600;margin-top:3px;margin-bottom:5px;color:var(--muted)}.contact-line a{color:var(--accent);text-decoration:none}.contact-line a:hover{text-decoration:underline}.contact-line a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}h1{font-size:clamp(28px,4vw,40px);line-height:1.1;margin:8px 0 12px;letter-spacing:-.03em}.intro{max-width:720px;color:var(--muted);margin:0 0 24px}.notice{padding:13px 15px;border:1px solid #62543a;background:#29251d;border-radius:10px;color:#e9dcc0;margin:0 0 22px}.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px}.button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:8px;font:600 14px inherit;cursor:pointer}.button:hover{border-color:var(--accent)}.button.primary{background:var(--accent);color:var(--accentText);border-color:var(--accent)}.button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.hidden{display:none}.group{background:rgba(25,28,34,.94);border:1px solid var(--line);border-radius:12px;margin:0 0 15px;overflow:hidden}.group h2{font-size:15px;margin:0;padding:13px 16px;background:#20232a;border-bottom:1px solid var(--line)}.mapping-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(170px,1fr);align-items:center;gap:15px;padding:12px 16px;border-bottom:1px solid #2b2f37}.mapping-row:last-child{border-bottom:0}.physical{font-weight:600}.detail{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}.select-wrap{display:flex;align-items:center;gap:8px}.select-wrap span{color:var(--muted);font-size:12px}.mapping-row select{width:100%;min-width:0;padding:9px 10px;border:1px solid #414753;border-radius:7px;background:#111318;color:var(--text);font:inherit}.bottom{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:22px}.status{color:var(--muted);font-size:13px;min-height:20px}.footer{margin-top:25px;color:var(--muted);font-size:12px}.footer code{color:var(--text);background:#20232a;padding:2px 5px;border-radius:4px}.footer a{color:var(--accent);font-weight:700;text-decoration:none}.footer a:hover{text-decoration:underline}.footer a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}@media(max-width:620px){main{padding:23px 12px}.mapping-row{grid-template-columns:1fr;gap:8px}.toolbar .button{flex:1 1 140px}}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">Made by Wooikee</div>
+<div class="contact-line">Contact me in <a href="https://guns.lol/ikee" target="_blank" rel="noopener noreferrer">Discord</a></div>
+<h1>Controller Remapper</h1>
+<p class="intro">Remap your controller using Bloodborne action names instead of generic PlayStation button labels. This page runs in your browser and never uploads your files. Your selections are saved in this browser; download the INI to carry them to the game or another PC.</p>
+<div class="notice"><strong>Prototype limits:</strong> The action names describe what Bloodborne does with each PlayStation-style input. This editor remaps digital buttons and triggers only. Analog-stick directions are shown below for reference but are not remappable yet. The current runtime also treats View/Back and the touchpad as one touchpad action, so left and right touchpad actions cannot be assigned separately. Restart the game after replacing the INI file.</div>
+<div class="toolbar">
+<label class="button" for="fileInput">Load existing INI</label>
+<input id="fileInput" class="hidden" type="file" accept=".ini,.txt,text/plain">
+<button class="button" id="defaultsButton" type="button">Reset to standard defaults</button>
+<button class="button" id="downloadButton" type="button">Download controller-remap.ini</button>
+</div>
+<div id="groups"></div>
+<section class="group"><h2>Analog controls · reference only</h2><div class="mapping-row"><div class="physical">Left stick<span class="detail">Move the hunter; hold Circle while moving to sprint</span></div><div class="select-wrap"><span>GAME ACTION</span><span>Move character</span></div></div><div class="mapping-row"><div class="physical">Right stick<span class="detail">Move the camera</span></div><div class="select-wrap"><span>GAME ACTION</span><span>Control camera</span></div></div></section>
+<div class="bottom">
+<button class="button primary" id="saveButton" type="button">Download configuration</button>
+<span id="status" class="status" role="status">Using standard default mappings. Load your existing INI first to keep its current A/B swap.</span>
+</div>
+<p class="footer">The left column is the physical controller input; the dropdown is the Bloodborne action it will trigger. The saved INI keeps the runtime tokens (such as <code>south=circle</code>) while this editor displays readable action names. SDL calls the bottom, right, left, and top face buttons <code>south</code>, <code>east</code>, <code>west</code>, and <code>north</code>.
+<br><br>To apply your file, move the downloaded <code>controller-remap.ini</code> beside your installed <code>Bloodborne.exe</code>, replace the previous INI, then start the game with <code>Launch Controller Test.bat</code>. Keep a backup of the working INI.</p>
+</main>
+<script>
+const actions = [
+  ['cross','Action / interact (Cross)'],
+  ['circle','Dodge, backstep, roll & sprint (Circle)'],
+  ['square','Use equipped consumable (Square)'],
+  ['triangle','Use Blood Vial / restore HP (Triangle)'],
+  ['l1','Transform right-hand weapon (L1)'],
+  ['r1','Right-hand weapon attack (R1)'],
+  ['l2','Left-hand attack / firearm (L2)'],
+  ['r2','Strong / charged attack (R2)'],
+  ['l3','Left stick click (L3; no standard action)'],
+  ['r3','Lock on / reset camera (R3)'],
+  ['options','Open menu / inventory (Options)'],
+  ['touchpad','Touchpad action (gesture / personal effects)'],
+  ['up','Gain Blood Bullets (+5 HP)'],
+  ['down','Switch equipped consumable'],
+  ['left','Switch left-hand weapon'],
+  ['right','Switch right-hand weapon'],
+  ['none','Unassigned (no action)']
+];
+const groups = [
+ {title:'Face buttons',rows:[['south','Bottom face button','Xbox A · usually Cross on PlayStation layouts'],['east','Right face button','Xbox B · usually Circle on PlayStation layouts'],['west','Left face button','Xbox X · usually Square on PlayStation layouts'],['north','Top face button','Xbox Y · usually Triangle on PlayStation layouts']]},
+ {title:'Shoulders and stick clicks',rows:[['leftshoulder','Left shoulder','Xbox LB / PlayStation L1'],['rightshoulder','Right shoulder','Xbox RB / PlayStation R1'],['leftstick','Left stick click','L3; not normally assigned to a Bloodborne action'],['rightstick','Right stick click','R3; lock on or reset camera']]},
+ {title:'Menu buttons and touchpad',rows:[['start','Start / Menu','Opens the menu / inventory'],['back','Back / View','Xbox View / PlayStation touchpad-style input'],['touchpad','Touchpad click','Gesture menu or Personal Effects depending on game behavior; left/right are not split by this prototype']]},
+ {title:'D-pad',rows:[['dpad_up','D-pad Up','Gain Blood Bullets by spending HP'],['dpad_down','D-pad Down','Switch equipped consumable'],['dpad_left','D-pad Left','Switch left-hand weapon'],['dpad_right','D-pad Right','Switch right-hand weapon']]},
+ {title:'Triggers',rows:[['lefttrigger','Left trigger','Xbox LT / PlayStation L2 · left-hand attack or firearm'],['righttrigger','Right trigger','Xbox RT / PlayStation R2 · strong or charged attack']]}
+];
+const defaults = {south:'cross',east:'circle',west:'square',north:'triangle',leftshoulder:'l1',rightshoulder:'r1',leftstick:'l3',rightstick:'r3',start:'options',back:'touchpad',touchpad:'touchpad',dpad_up:'up',dpad_down:'down',dpad_left:'left',dpad_right:'right',lefttrigger:'l2',righttrigger:'r2'};
+let values = {...defaults};
+const groupsElement = document.getElementById('groups');
+const statusElement = document.getElementById('status');
+const display = Object.fromEntries(actions.map(([value,label])=>[value,label]));
+let restoredSavedValues = false;
+try {
+  const saved = JSON.parse(localStorage.getItem('bbport-controller-remapper-values') || 'null');
+  if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+    for (const key of Object.keys(defaults)) {
+      if (typeof saved[key] === 'string' && Object.prototype.hasOwnProperty.call(display, saved[key])) {
+        values[key] = saved[key];
+        restoredSavedValues = true;
+      }
+    }
+  }
+} catch {}
+function persistValues(){
+  try { localStorage.setItem('bbport-controller-remapper-values', JSON.stringify(values)); } catch {}
+}
+function setStatus(message){statusElement.textContent=message;}
+function render(){
+  groupsElement.replaceChildren();
+  for(const group of groups){
+    const section=document.createElement('section'); section.className='group';
+    const title=document.createElement('h2'); title.textContent=group.title; section.append(title);
+    for(const [key,label,detail] of group.rows){
+      const row=document.createElement('div'); row.className='mapping-row';
+      const physical=document.createElement('div'); physical.className='physical'; physical.textContent=label;
+      if(detail){const sub=document.createElement('span');sub.className='detail';sub.textContent=detail;physical.append(sub)}
+      const wrap=document.createElement('div');wrap.className='select-wrap';
+      const name=document.createElement('span');name.textContent='ACTION';
+      const select=document.createElement('select');select.id='map-'+key;select.setAttribute('aria-label',label+' mapping');
+      for(const [value,actionLabel] of actions){const option=document.createElement('option');option.value=value;option.textContent=actionLabel;select.append(option)}
+      select.value=values[key]||'none'; select.addEventListener('change',()=>{values[key]=select.value;persistValues();setStatus('Saved in this browser. Download the INI file to apply these mappings to the game.')});
+      wrap.append(name,select);row.append(physical,wrap);section.append(row);
+    }
+    groupsElement.append(section);
+  }
+}
+function parseIni(text){
+  const next={...defaults};
+  for(const raw of text.split(/\r?\n/)){
+    const line=raw.replace(/#.*$/,'').trim(); if(!line||!line.includes('='))continue;
+    const index=line.indexOf('=');const key=line.slice(0,index).trim().toLowerCase();const value=line.slice(index+1).trim().toLowerCase();
+    if(Object.prototype.hasOwnProperty.call(next,key)&&Object.prototype.hasOwnProperty.call(display,value))next[key]=value;
+  }
+  values=next;persistValues();render();
+}
+function serialize(){
+  const lines=['# BBPort controller remapping configuration','# Map each SDL gamepad input to a Bloodborne action.','# Changes apply after restarting the game.',''];
+  for(const group of groups){lines.push('# '+group.title);for(const [key] of group.rows)lines.push(key+'='+(values[key]||'none'));lines.push('')}
+  return lines.join('\r\n');
+}
+function download(){
+  const blob=new Blob([serialize()],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='controller-remap.ini';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus('Downloaded controller-remap.ini. Move it to your BBPort game folder and restart the game.');
+}
+document.getElementById('fileInput').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{parseIni(await file.text());setStatus('Loaded '+file.name+'. Download the updated INI when you are ready.')}catch{setStatus('Could not read that file. Choose a plain-text INI file.')}event.target.value='';});
+document.getElementById('defaultsButton').addEventListener('click',()=>{values={...defaults};persistValues();render();setStatus('Standard default mappings restored and saved in this browser. Download the INI to apply them to the game.')});
+document.getElementById('downloadButton').addEventListener('click',download);
+document.getElementById('saveButton').addEventListener('click',download);
+render();
+if (restoredSavedValues) setStatus('Restored your saved mappings from this browser. Download the INI file to apply them to the game.');
+</script>
+</body>
+</html>

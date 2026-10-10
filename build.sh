@@ -16,6 +16,10 @@ MINGW*|MSYS*)
         git submodule update --init --recursive
     fi
     for patch in gpu/patches/fsr-vulkan/*.patch; do
+        if [[ "$patch" == *0002-ffx_vk-include-mutex-for-libc.patch ]] &&
+           grep -q 'bbport: libc++ does not include it transitively' gpu/third_party/fsr-vulkan/upstream/ffx-1.1.4/sdk/src/backends/vk/ffx_vk.cpp; then
+            continue
+        fi
         if ! git -C gpu/third_party/fsr-vulkan apply --reverse --check "$PWD/$patch" 2>/dev/null; then
             git -C gpu/third_party/fsr-vulkan apply "$PWD/$patch"
         fi
