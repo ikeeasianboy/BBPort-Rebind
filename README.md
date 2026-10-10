@@ -46,4 +46,4 @@ This repository retains the upstream project license and applicable third-party 
 
 Bloodborne game files are not included.
 
-**Contact me in Discord:** https://guns.lol/ikee
+**Contact me in [Discord](https://guns.lol/ikee)**
