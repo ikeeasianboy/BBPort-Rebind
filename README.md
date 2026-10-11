@@ -1,79 +1,134 @@
 # BBPort Rebind
 
-**Controller Remapping for Bloodborne PC**
+**Custom Controller Remapping for Bloodborne PC**
 
 Created by **Wooikee**.
 
-BBPort Rebind is an experimental controller-remapping modification for Supermedo's BBPort v1.6 on Windows. It adds configurable controller button and trigger mappings through a modified runtime and a browser-based editor.
+BBPort Rebind lets you customize controller button mappings for Supermedo's BBPort v1.6 on Windows.
 
-## Controller Remapper
+## Download
 
-**[Open the BBPort Rebind Controller Remapper](https://ikeeasianboy.github.io/BBPort-Rebind/)**
+1. Open the [latest GitHub release](https://github.com/ikeeasianboy/BBPort-Rebind/releases/latest).
+2. Find the `BBPort_Rebind.zip` file under **Assets**.
+3. Download the ZIP and extract it using Windows File Explorer or your preferred archive tool.
 
-Use the editor to customize supported controller inputs, save your configuration, and download `controller-remap.ini`.
+## Installation Guide
 
-The editor runs in your browser. Your configuration is not uploaded by the editor.
+### Step 1: Locate Your BBPort Folder
 
-**Important:** The editor only creates the configuration file. A compatible modified BBPort runtime is required for the remappings to work in-game.
+Find the folder where your existing BBPort installation is located. This is the folder containing `Bloodborne.exe`.
 
-## Features
+**Do not delete or replace your original BBPort files.**
 
-- Remap supported controller buttons and triggers.
-- Assign actions such as Cross, Circle, Square, Triangle, L1, R1, L2, R2, Options, and D-pad actions.
-- Load an existing `controller-remap.ini` into the editor.
-- Download and reuse customized controller configurations.
-- Keep the remapping changes separate from the original BBPort installation.
+### Step 2: Install BBPort Rebind
 
-## How It Works
+After extracting the archive, locate the `BBPort Rebind` folder.
 
-1. Open the [Controller Remapper](https://ikeeasianboy.github.io/BBPort-Rebind/).
-2. Choose the desired action for each supported controller input.
-3. Download `controller-remap.ini`.
-4. Use the configuration with a compatible BBPort Rebind runtime. Restart the game after changing the configuration.
+Place it inside your existing BBPort folder so the directory structure looks like this:
 
-The modified runtime reads the configuration path specified by `BB_CONTROLLER_REMAP`. If that variable is not set, it looks for `controller-remap.ini` in the process working directory.
-
-## Requirements
-
-- Supermedo's BBPort v1.6 for Windows.
-- A compatible build of the modified BBPort Rebind runtime.
-- For building from source, MSYS2 CLANG64 and the required build dependencies.
-
-Original project: [Supermedo/bloodborne_pc](https://github.com/Supermedo/bloodborne_pc)
-
-## Current Status
-
-**Alpha**
-
-The controller-remapping implementation has been tested in-game on the developer's setup. Broader controller compatibility and clean-install testing are still needed.
-
-This repository currently provides the source changes and browser-based editor, not a ready-to-install BBPort Rebind binary release. The prebuilt package is being held back while an antivirus detection is investigated.
-
-## Limitations
-
-- Analog-stick direction remapping is not implemented.
-- Keyboard key rebinding is not included.
-- Back/View and touchpad inputs share the same touchpad action in the current implementation.
-- Controller behavior may vary depending on the controller and its SDL gamepad mapping.
-
-## Building from Source
-
-Use an MSYS2 CLANG64 environment and follow the build prerequisites documented by the upstream project.
-
-Run:
-
-```bash
-bash build.sh
+```text
+Your BBPort Folder/
+├── Bloodborne.exe
+└── BBPort Rebind/
+    ├── Launch BBPort with Controller Remap.bat
+    ├── controller-remap.ini
+    └── runtime/
+        └── BBPort_Controller_Remapper.html
 ```
 
-Review the source and the upstream project documentation before building.
+The other files included with the package should remain in their original locations.
+
+### Step 3: Launch the Game
+
+1. Open the `BBPort Rebind` folder.
+2. Double-click `Launch BBPort with Controller Remap.bat`.
+3. Once BBPort opens, press **Play** to launch Bloodborne.
+
+**Important:** Always launch the game using the included batch file when you want controller remapping enabled. Launching through your original shortcut may not load the custom configuration.
+
+## How to Customize Your Controls
+
+### Step 1: Open the Controller Editor
+
+Open this link:
+
+**[BBPort Rebind Controller Remapper](https://ikeeasianboy.github.io/BBPort-Rebind/)**
+
+The editor runs in your web browser. You do not need to install a separate application.
+
+### Step 2: Choose Your Button Mappings
+
+Select the desired Bloodborne action for each supported physical controller input.
+
+Available actions include:
+
+- Cross, Circle, Square, and Triangle
+- L1, R1, L2, and R2
+- L3 and R3
+- Options and touchpad
+- D-pad directions
+- None, to disable a mapped action
+
+For example, to swap Cross and Circle, assign Circle to the physical input that normally sends Cross, and Cross to the physical input that normally sends Circle.
+
+### Step 3: Download Your Configuration
+
+1. Finish customizing your mappings.
+2. Click **Download INI** in the editor.
+3. Your browser will download `controller-remap.ini`.
+
+### Step 4: Replace the Existing Configuration
+
+1. Open your `BBPort Rebind` folder.
+2. Replace the existing `controller-remap.ini` with the downloaded file.
+3. Make sure the new file has the exact name `controller-remap.ini`, not `controller-remap (1).ini` or `controller-remap.ini.txt`.
+
+### Step 5: Test Your Controls
+
+Close the game if it is running.
+
+Launch it again using `Launch BBPort with Controller Remap.bat` and press **Play**. Your updated mappings should now be active.
+
+Repeat these steps whenever you want to change your controls.
+
+## Restore Default Controls
+
+1. Open the [Controller Remapper](https://ikeeasianboy.github.io/BBPort-Rebind/).
+2. Select **Reset to Standard Defaults**.
+3. Download the new `controller-remap.ini`.
+4. Replace the existing configuration file in your `BBPort Rebind` folder.
+5. Restart the game using the included batch file.
+
+## Troubleshooting
+
+**My controls have not changed.**
+
+Make sure you replaced the correct `controller-remap.ini` file and relaunched the game after changing the configuration.
+
+**BBPort launches, but the remapping does not work.**
+
+Make sure you launched the game using `Launch BBPort with Controller Remap.bat` rather than the original shortcut.
+
+**The editor does not remember my previous selections.**
+
+The editor saves selections in your browser's local storage. Opening it in a different browser or clearing that browser's site data may reset your selections. Your downloaded INI file remains a separate configuration.
+
+## Current Limitations
+
+- Analog-stick directions cannot currently be remapped.
+- Keyboard key rebinding is not included.
+- Back/View and touchpad inputs share the same touchpad action.
+
+## Security Notice
+
+One antivirus scanner has flagged the release archive. The cause has not been conclusively identified. Review the source and scan the archive before running it. Do not disable your security software to install the mod.
 
 ## Credits and License
 
-BBPort Rebind is based on [Supermedo's BBPort](https://github.com/Supermedo/bloodborne_pc).
+Based on [Supermedo's BBPort](https://github.com/Supermedo/bloodborne_pc).
 
 See the repository's `LICENSE` file and applicable third-party license notices.
 
 No Bloodborne game files are included.
 
-**Contact me in Discord:** [guns.lol/ikee](https://guns.lol/ikee)
+**Contact me in [Discord](https://guns.lol/ikee)**
