@@ -18,7 +18,7 @@ https://github.com/Supermedo/bloodborne_pc
 
 Base version: windows-v1.7.2
 
-The modified source files are included in the bbport-stability branch.
+The modified source files are included in the gesture-menu-fix-v1.0 branch of https://github.com/ikeeasianboy/BBPort-Rebind.
 The exact source patch is also provided as gesture-menu-fix.patch.
 
 ## Build from source
@@ -27,7 +27,7 @@ The exact source patch is also provided as gesture-menu-fix.patch.
    repository's Windows build instructions.
 2. Clone this repository's bbport-stability branch:
 
-   git clone --branch bbport-stability https://github.com/YOUR_USERNAME/bloodborne_pc.git
+   git clone --branch gesture-menu-fix-v1.0 https://github.com/ikeeasianboy/BBPort-Rebind.git
 
 3. Enter the repository:
 
@@ -41,7 +41,7 @@ The exact source patch is also provided as gesture-menu-fix.patch.
 
    bash packaging/windows/package.sh
 
-Replace YOUR_USERNAME with the GitHub account that owns the fork.
+This repository contains the published Gesture Menu Fix source and build instructions.
 
 ## Installation
 
