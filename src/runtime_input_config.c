@@ -526,6 +526,7 @@ void input_config_defaults(InputConfig *out) {
 "pad_down = k\n" \
 "pad_left = j\n" \
 "pad_right = l\n" \
+"touchpad_left = g\n" \
 "touchpad_left = tab\n" \
 "touchpad_right = backspace\n" \
 "\n" \

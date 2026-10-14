@@ -1,0 +1,137 @@
+diff --git a/launcher/bbport_input_config.py b/launcher/bbport_input_config.py
+index a6797e2..3a964e5 100644
+--- a/launcher/bbport_input_config.py
++++ b/launcher/bbport_input_config.py
+@@ -162,6 +162,7 @@ pad_up = i
+ pad_down = k
+ pad_left = j
+ pad_right = l
++touchpad_left = g
+ touchpad_left = tab
+ touchpad_right = backspace
+ 
+diff --git a/src/runtime_input_config.c b/src/runtime_input_config.c
+index 1982bd0..e5f7384 100644
+--- a/src/runtime_input_config.c
++++ b/src/runtime_input_config.c
+@@ -526,6 +526,7 @@ void input_config_defaults(InputConfig *out) {
+ "pad_down = k\n" \
+ "pad_left = j\n" \
+ "pad_right = l\n" \
++"touchpad_left = g\n" \
+ "touchpad_left = tab\n" \
+ "touchpad_right = backspace\n" \
+ "\n" \
+diff --git a/src/runtime_pad.c b/src/runtime_pad.c
+index 65e1a23..8a34b65 100644
+--- a/src/runtime_pad.c
++++ b/src/runtime_pad.c
+@@ -9,7 +9,7 @@
+  * Triangle, and C is also R3 (kept, so existing muscle memory for lock-on does not break):
+  *   WASD left stick, arrow keys right stick, Space Cross, LShift Circle,
+  *   E Square, V Triangle, 1 L1, 3 R1, R L2, F R2, Z L3, Q/C R3,
+- *   Enter Options, Tab left touchpad, Backspace right touchpad,
++ *   Enter Options, G/Tab left touchpad, Backspace right touchpad,
+  *   IJKL d-pad (I up, K down, J left, L right). */
+ #define _GNU_SOURCE
+ #include "runtime.h"
+@@ -67,6 +67,9 @@ static int initialized, opened, sdl_ready;
+ static SDL_Gamepad *gamepad;
+ static size_t reads;
+ static uint8_t connected_count;
++static uint64_t controller_l3_down_us;
++static int controller_l3_was_down;
++static int controller_l3_long_press_triggered;
+ static uint64_t last_mouse_sample_us; /* CNV-003: dt since the previous mouse-to-stick sample */
+ static double smoothed_mouse_stick_x, smoothed_mouse_stick_y; /* mouse_to_axis's EMA state */
+ 
+@@ -75,10 +78,24 @@ static uint8_t trigger(int16_t v) { int x=v>>7; return (uint8_t)(x<0 ? 0 : x>255
+ static uint16_t touch_axis(float v, int max) {
+     return (uint16_t)(v<=0.0f ? 0 : v>=1.0f ? max : (int)(v*max+0.5f));
+ }
++static uint8_t synth_touch_id = 1;
++static uint64_t touch_down_us = 0;
++
+ static void touch_click(PadData *d, int right) {
+-    d->buttons|=BTN_TOUCHPAD;
+-    d->touch_count=1;
+-    d->touches[0]=(PadTouch){.x=right ? 1440 : 480,.y=471,.id=0};
++    uint64_t t = now_us();
++    if (!touch_down_us) {
++        touch_down_us = t;
++        if (++synth_touch_id > 127 || synth_touch_id == 0)
++            synth_touch_id = 1;
++    }
++    d->buttons |= BTN_TOUCHPAD;
++    d->touch_count = 1;
++    d->touch_held_time = (uint32_t)(t - touch_down_us);
++    d->touches[0] = (PadTouch){
++        .x = right ? 1440 : 480,
++        .y = 471,
++        .id = synth_touch_id
++    };
+ }
+ 
+ /* Opens the first gamepad SDL knows about; called under lock. */
+@@ -401,7 +418,13 @@ static void sample_host(PadData *d) {
+     d->connected=1; d->connected_count=connected_count ? connected_count : 1;
+     d->timestamp=now_us();
+     SDL_Gamepad *g=current_gamepad();
+-    if (bbgpu_overlay_captures_input()) return; /* settings menu open: neutral input */
++    if (bbgpu_overlay_captures_input()) {
++        controller_l3_down_us = 0;
++        controller_l3_was_down = 0;
++        controller_l3_long_press_triggered = 0;
++        touch_down_us = 0;
++        return; /* settings menu open: neutral input */
++    }
+     const InputConfig *cfg=active_config();
+     BbMouseInput mouse; bbgpu_mouse_take(&mouse); /* MOU-008: drains dx/dy; buttons/wheel persist */
+     HostState host={SDL_WasInit(SDL_INIT_VIDEO) ? SDL_GetKeyboardState(NULL) : NULL, g,
+@@ -414,10 +437,38 @@ static void sample_host(PadData *d) {
+         OUT_CROSS,OUT_CIRCLE,OUT_SQUARE,OUT_TRIANGLE,OUT_L1,OUT_R1,OUT_L3,OUT_R3,OUT_OPTIONS,
+         OUT_PAD_UP,OUT_PAD_DOWN,OUT_PAD_LEFT,OUT_PAD_RIGHT,
+     };
++    const int controller_l3_down =
++        g && SDL_GetGamepadButton(g, SDL_GAMEPAD_BUTTON_LEFT_STICK);
++
+     for (size_t i=0;i<sizeof(plain_buttons)/sizeof(*plain_buttons);++i) {
+         InputOutput out=plain_buttons[i];
++        if (out == OUT_L3 && controller_l3_down) continue;
+         if (button_output_held(&host,cfg,out)) d->buttons|=button_bit(out);
+     }
++
++    const uint64_t controller_l3_now = now_us();
++    if (controller_l3_down) {
++        if (!controller_l3_was_down) {
++            controller_l3_was_down = 1;
++            controller_l3_down_us = controller_l3_now;
++            controller_l3_long_press_triggered = 0;
++        }
++
++        if (!controller_l3_long_press_triggered &&
++            controller_l3_now - controller_l3_down_us >= 600000u) {
++            touch_click(d, 0);
++            controller_l3_long_press_triggered = 1;
++        } else if (controller_l3_long_press_triggered) {
++            touch_click(d, 0);
++        }
++    } else if (controller_l3_was_down) {
++        if (!controller_l3_long_press_triggered)
++            d->buttons |= BTN_L3;
++
++        controller_l3_was_down = 0;
++        controller_l3_down_us = 0;
++        controller_l3_long_press_triggered = 0;
++    }
+     /* OUT-003/OUT-004: l2/r2 carry both a button bit and an analog value. A gatilho físico
+      * passes its own reading; a plain button/key bound to l2/r2 snaps the analog to 255,
+      * matching the pre-existing keyboard behavior (KBD-006). */
+@@ -644,6 +695,7 @@ static void sample(PadData *d) {
+     d->buttons|=injected.buttons;
+     if (injected.touch_side>=0) touch_click(d,injected.touch_side);
+     else if ((d->buttons & BTN_TOUCHPAD) && !d->touch_count) touch_click(d,0);
++    if (!d->touch_count) touch_down_us = 0;
+     if (injected.buttons & BTN_L2) d->l2=255;
+     if (injected.buttons & BTN_R2) d->r2=255;
+     uint8_t *axes[4]={&d->left_x,&d->left_y,&d->right_x,&d->right_y};

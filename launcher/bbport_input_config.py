@@ -162,6 +162,7 @@ pad_up = i
 pad_down = k
 pad_left = j
 pad_right = l
+touchpad_left = g
 touchpad_left = tab
 touchpad_right = backspace
 
